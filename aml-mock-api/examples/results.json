@@ -1,0 +1,1470 @@
+{
+  "run_id": "00000000-0000-4000-8000-000000000001",
+  "status": "succeeded",
+  "versions": {
+    "schema_version": "1.0.0",
+    "is_mock": true,
+    "dataset_version": "synthetic-fixture-v1",
+    "model_version": "mock-gnn-v1",
+    "preprocessing_version": "mock-preprocessing-v1"
+  },
+  "parameters": {
+    "start_date": "2026-10-01",
+    "end_date": "2026-10-03",
+    "threshold": 0.8,
+    "analysis_cutoff": "2026-10-04T00:00:00Z",
+    "history_days": 1,
+    "graph_hops": 2,
+    "max_graph_nodes": 50,
+    "max_graph_edges": 150,
+    "mock_scenario": "success"
+  },
+  "dataset_timezone": "UTC",
+  "generated_at": "2026-11-01T04:31:20.146357Z",
+  "summary": {
+    "dataset_account_count": 9,
+    "active_account_count": 9,
+    "transaction_count": 24,
+    "detected_transaction_count": 12,
+    "totals_by_currency": [
+      {
+        "currency": "EUR",
+        "amount": "13140.90",
+        "transaction_count": 9
+      },
+      {
+        "currency": "USD",
+        "amount": "17100.93",
+        "transaction_count": 15
+      }
+    ]
+  },
+  "total": 12,
+  "offset": 0,
+  "limit": 1,
+  "has_more": true,
+  "next_offset": 1,
+  "items": [
+    {
+      "transaction": {
+        "transaction_id": "tx-01-004",
+        "timestamp": "2026-10-01T09:15:00Z",
+        "source": {
+          "account_id": "BANK01:HUB",
+          "bank_id": "BANK01",
+          "account_number": "HUB"
+        },
+        "target": {
+          "account_id": "BANK01:D",
+          "bank_id": "BANK01",
+          "account_number": "D"
+        },
+        "amount": "1200.00",
+        "currency": "USD",
+        "payment_format": "Wire"
+      },
+      "suspicion_score": 0.93,
+      "is_detected": true,
+      "evidence_id": "00000000-0000-4000-8000-000000000001:tx-01-004",
+      "observed_patterns": [
+        "fan_in",
+        "fan_out"
+      ],
+      "graph": {
+        "neighborhood_direction": "both",
+        "hops": 2,
+        "nodes": [
+          {
+            "account_id": "BANK01:A",
+            "bank_id": "BANK01",
+            "account_number": "A",
+            "role": "related"
+          },
+          {
+            "account_id": "BANK01:B",
+            "bank_id": "BANK01",
+            "account_number": "B",
+            "role": "related"
+          },
+          {
+            "account_id": "BANK01:C",
+            "bank_id": "BANK01",
+            "account_number": "C",
+            "role": "related"
+          },
+          {
+            "account_id": "BANK01:D",
+            "bank_id": "BANK01",
+            "account_number": "D",
+            "role": "selected_target"
+          },
+          {
+            "account_id": "BANK01:HUB",
+            "bank_id": "BANK01",
+            "account_number": "HUB",
+            "role": "selected_source"
+          },
+          {
+            "account_id": "BANK02:E",
+            "bank_id": "BANK02",
+            "account_number": "E",
+            "role": "related"
+          },
+          {
+            "account_id": "BANK02:F",
+            "bank_id": "BANK02",
+            "account_number": "F",
+            "role": "related"
+          }
+        ],
+        "edges": [
+          {
+            "transaction": {
+              "transaction_id": "tx-01-004",
+              "timestamp": "2026-10-01T09:15:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK01:D",
+                "bank_id": "BANK01",
+                "account_number": "D"
+              },
+              "amount": "1200.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.93,
+            "is_detected": true,
+            "is_selected": true
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-01-001",
+              "timestamp": "2026-10-01T09:00:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "1000.10",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.91,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-01-002",
+              "timestamp": "2026-10-01T09:05:00Z",
+              "source": {
+                "account_id": "BANK01:B",
+                "bank_id": "BANK01",
+                "account_number": "B"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "2000.20",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.84,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-01-003",
+              "timestamp": "2026-10-01T09:10:00Z",
+              "source": {
+                "account_id": "BANK01:C",
+                "bank_id": "BANK01",
+                "account_number": "C"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "3000.30",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.35,
+            "is_detected": false,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-01-005",
+              "timestamp": "2026-10-01T09:20:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:E",
+                "bank_id": "BANK02",
+                "account_number": "E"
+              },
+              "amount": "1300.00",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.81,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-01-006",
+              "timestamp": "2026-10-01T09:25:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:F",
+                "bank_id": "BANK02",
+                "account_number": "F"
+              },
+              "amount": "1400.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.29,
+            "is_detected": false,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-01-007",
+              "timestamp": "2026-10-01T09:30:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "100.01",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.15,
+            "is_detected": false,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-02-001",
+              "timestamp": "2026-10-02T09:00:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "1000.10",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.91,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-02-002",
+              "timestamp": "2026-10-02T09:05:00Z",
+              "source": {
+                "account_id": "BANK01:B",
+                "bank_id": "BANK01",
+                "account_number": "B"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "2000.20",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.84,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-02-003",
+              "timestamp": "2026-10-02T09:10:00Z",
+              "source": {
+                "account_id": "BANK01:C",
+                "bank_id": "BANK01",
+                "account_number": "C"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "3000.30",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.35,
+            "is_detected": false,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-02-004",
+              "timestamp": "2026-10-02T09:15:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK01:D",
+                "bank_id": "BANK01",
+                "account_number": "D"
+              },
+              "amount": "1200.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.93,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-02-005",
+              "timestamp": "2026-10-02T09:20:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:E",
+                "bank_id": "BANK02",
+                "account_number": "E"
+              },
+              "amount": "1300.00",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.81,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-02-006",
+              "timestamp": "2026-10-02T09:25:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:F",
+                "bank_id": "BANK02",
+                "account_number": "F"
+              },
+              "amount": "1400.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.29,
+            "is_detected": false,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-02-007",
+              "timestamp": "2026-10-02T09:30:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "100.01",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.15,
+            "is_detected": false,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-03-001",
+              "timestamp": "2026-10-03T09:00:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "1000.10",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.91,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-03-002",
+              "timestamp": "2026-10-03T09:05:00Z",
+              "source": {
+                "account_id": "BANK01:B",
+                "bank_id": "BANK01",
+                "account_number": "B"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "2000.20",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.84,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-03-003",
+              "timestamp": "2026-10-03T09:10:00Z",
+              "source": {
+                "account_id": "BANK01:C",
+                "bank_id": "BANK01",
+                "account_number": "C"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "3000.30",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.35,
+            "is_detected": false,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-03-004",
+              "timestamp": "2026-10-03T09:15:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK01:D",
+                "bank_id": "BANK01",
+                "account_number": "D"
+              },
+              "amount": "1200.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.93,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-03-005",
+              "timestamp": "2026-10-03T09:20:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:E",
+                "bank_id": "BANK02",
+                "account_number": "E"
+              },
+              "amount": "1300.00",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.81,
+            "is_detected": true,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-03-006",
+              "timestamp": "2026-10-03T09:25:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:F",
+                "bank_id": "BANK02",
+                "account_number": "F"
+              },
+              "amount": "1400.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.29,
+            "is_detected": false,
+            "is_selected": false
+          },
+          {
+            "transaction": {
+              "transaction_id": "tx-03-007",
+              "timestamp": "2026-10-03T09:30:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "100.01",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            "suspicion_score": 0.15,
+            "is_detected": false,
+            "is_selected": false
+          }
+        ],
+        "total_nodes": 7,
+        "total_edges": 21,
+        "omitted_nodes": 0,
+        "omitted_edges": 0,
+        "truncated": false
+      },
+      "model_explanation": {
+        "method": "mock_fixture",
+        "is_mock": true,
+        "note": "UI 연동용 고정 중요도이며 GNNExplainer 계산 결과가 아닙니다.",
+        "edges": [
+          {
+            "transaction_id": "tx-01-004",
+            "importance": 0.95
+          }
+        ]
+      },
+      "evidence": {
+        "evidence_id": "00000000-0000-4000-8000-000000000001:tx-01-004",
+        "run_id": "00000000-0000-4000-8000-000000000001",
+        "selected_transaction_id": "tx-01-004",
+        "scope_start": "2026-10-01T00:00:00Z",
+        "scope_end_exclusive": "2026-10-04T00:00:00Z",
+        "history_included": false,
+        "transactions": [
+          {
+            "transaction_id": "tx-01-001",
+            "timestamp": "2026-10-01T09:00:00Z",
+            "source": {
+              "account_id": "BANK01:A",
+              "bank_id": "BANK01",
+              "account_number": "A"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "1000.10",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-01-002",
+            "timestamp": "2026-10-01T09:05:00Z",
+            "source": {
+              "account_id": "BANK01:B",
+              "bank_id": "BANK01",
+              "account_number": "B"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "2000.20",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-01-003",
+            "timestamp": "2026-10-01T09:10:00Z",
+            "source": {
+              "account_id": "BANK01:C",
+              "bank_id": "BANK01",
+              "account_number": "C"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "3000.30",
+            "currency": "EUR",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-01-004",
+            "timestamp": "2026-10-01T09:15:00Z",
+            "source": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "target": {
+              "account_id": "BANK01:D",
+              "bank_id": "BANK01",
+              "account_number": "D"
+            },
+            "amount": "1200.00",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-01-005",
+            "timestamp": "2026-10-01T09:20:00Z",
+            "source": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "target": {
+              "account_id": "BANK02:E",
+              "bank_id": "BANK02",
+              "account_number": "E"
+            },
+            "amount": "1300.00",
+            "currency": "EUR",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-01-006",
+            "timestamp": "2026-10-01T09:25:00Z",
+            "source": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "target": {
+              "account_id": "BANK02:F",
+              "bank_id": "BANK02",
+              "account_number": "F"
+            },
+            "amount": "1400.00",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-01-007",
+            "timestamp": "2026-10-01T09:30:00Z",
+            "source": {
+              "account_id": "BANK01:A",
+              "bank_id": "BANK01",
+              "account_number": "A"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "100.01",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-02-001",
+            "timestamp": "2026-10-02T09:00:00Z",
+            "source": {
+              "account_id": "BANK01:A",
+              "bank_id": "BANK01",
+              "account_number": "A"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "1000.10",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-02-002",
+            "timestamp": "2026-10-02T09:05:00Z",
+            "source": {
+              "account_id": "BANK01:B",
+              "bank_id": "BANK01",
+              "account_number": "B"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "2000.20",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-02-003",
+            "timestamp": "2026-10-02T09:10:00Z",
+            "source": {
+              "account_id": "BANK01:C",
+              "bank_id": "BANK01",
+              "account_number": "C"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "3000.30",
+            "currency": "EUR",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-02-004",
+            "timestamp": "2026-10-02T09:15:00Z",
+            "source": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "target": {
+              "account_id": "BANK01:D",
+              "bank_id": "BANK01",
+              "account_number": "D"
+            },
+            "amount": "1200.00",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-02-005",
+            "timestamp": "2026-10-02T09:20:00Z",
+            "source": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "target": {
+              "account_id": "BANK02:E",
+              "bank_id": "BANK02",
+              "account_number": "E"
+            },
+            "amount": "1300.00",
+            "currency": "EUR",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-02-006",
+            "timestamp": "2026-10-02T09:25:00Z",
+            "source": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "target": {
+              "account_id": "BANK02:F",
+              "bank_id": "BANK02",
+              "account_number": "F"
+            },
+            "amount": "1400.00",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-02-007",
+            "timestamp": "2026-10-02T09:30:00Z",
+            "source": {
+              "account_id": "BANK01:A",
+              "bank_id": "BANK01",
+              "account_number": "A"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "100.01",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-03-001",
+            "timestamp": "2026-10-03T09:00:00Z",
+            "source": {
+              "account_id": "BANK01:A",
+              "bank_id": "BANK01",
+              "account_number": "A"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "1000.10",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-03-002",
+            "timestamp": "2026-10-03T09:05:00Z",
+            "source": {
+              "account_id": "BANK01:B",
+              "bank_id": "BANK01",
+              "account_number": "B"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "2000.20",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-03-003",
+            "timestamp": "2026-10-03T09:10:00Z",
+            "source": {
+              "account_id": "BANK01:C",
+              "bank_id": "BANK01",
+              "account_number": "C"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "3000.30",
+            "currency": "EUR",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-03-004",
+            "timestamp": "2026-10-03T09:15:00Z",
+            "source": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "target": {
+              "account_id": "BANK01:D",
+              "bank_id": "BANK01",
+              "account_number": "D"
+            },
+            "amount": "1200.00",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-03-005",
+            "timestamp": "2026-10-03T09:20:00Z",
+            "source": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "target": {
+              "account_id": "BANK02:E",
+              "bank_id": "BANK02",
+              "account_number": "E"
+            },
+            "amount": "1300.00",
+            "currency": "EUR",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-03-006",
+            "timestamp": "2026-10-03T09:25:00Z",
+            "source": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "target": {
+              "account_id": "BANK02:F",
+              "bank_id": "BANK02",
+              "account_number": "F"
+            },
+            "amount": "1400.00",
+            "currency": "USD",
+            "payment_format": "Wire"
+          },
+          {
+            "transaction_id": "tx-03-007",
+            "timestamp": "2026-10-03T09:30:00Z",
+            "source": {
+              "account_id": "BANK01:A",
+              "bank_id": "BANK01",
+              "account_number": "A"
+            },
+            "target": {
+              "account_id": "BANK01:HUB",
+              "bank_id": "BANK01",
+              "account_number": "HUB"
+            },
+            "amount": "100.01",
+            "currency": "USD",
+            "payment_format": "Wire"
+          }
+        ],
+        "totals_by_currency": [
+          {
+            "currency": "EUR",
+            "amount": "12900.90",
+            "transaction_count": 6
+          },
+          {
+            "currency": "USD",
+            "amount": "17100.93",
+            "transaction_count": 15
+          }
+        ],
+        "patterns": [
+          {
+            "kind": "fan_in",
+            "account_id": "BANK01:HUB",
+            "distinct_counterparties": 3,
+            "transaction_ids": [
+              "tx-01-001",
+              "tx-01-002",
+              "tx-01-003",
+              "tx-01-007",
+              "tx-02-001",
+              "tx-02-002",
+              "tx-02-003",
+              "tx-02-007",
+              "tx-03-001",
+              "tx-03-002",
+              "tx-03-003",
+              "tx-03-007"
+            ]
+          },
+          {
+            "kind": "fan_out",
+            "account_id": "BANK01:HUB",
+            "distinct_counterparties": 3,
+            "transaction_ids": [
+              "tx-01-004",
+              "tx-01-005",
+              "tx-01-006",
+              "tx-02-004",
+              "tx-02-005",
+              "tx-02-006",
+              "tx-03-004",
+              "tx-03-005",
+              "tx-03-006"
+            ]
+          }
+        ],
+        "aggregation_scope": "full_neighborhood_before_display_limits"
+      },
+      "report_input": {
+        "run_id": "00000000-0000-4000-8000-000000000001",
+        "evidence_id": "00000000-0000-4000-8000-000000000001:tx-01-004",
+        "selected_transaction_id": "tx-01-004",
+        "versions": {
+          "schema_version": "1.0.0",
+          "is_mock": true,
+          "dataset_version": "synthetic-fixture-v1",
+          "model_version": "mock-gnn-v1",
+          "preprocessing_version": "mock-preprocessing-v1"
+        },
+        "analysis_cutoff": "2026-10-04T00:00:00Z",
+        "threshold": 0.8,
+        "suspicion_score": 0.93,
+        "evidence": {
+          "evidence_id": "00000000-0000-4000-8000-000000000001:tx-01-004",
+          "run_id": "00000000-0000-4000-8000-000000000001",
+          "selected_transaction_id": "tx-01-004",
+          "scope_start": "2026-10-01T00:00:00Z",
+          "scope_end_exclusive": "2026-10-04T00:00:00Z",
+          "history_included": false,
+          "transactions": [
+            {
+              "transaction_id": "tx-01-001",
+              "timestamp": "2026-10-01T09:00:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "1000.10",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-01-002",
+              "timestamp": "2026-10-01T09:05:00Z",
+              "source": {
+                "account_id": "BANK01:B",
+                "bank_id": "BANK01",
+                "account_number": "B"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "2000.20",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-01-003",
+              "timestamp": "2026-10-01T09:10:00Z",
+              "source": {
+                "account_id": "BANK01:C",
+                "bank_id": "BANK01",
+                "account_number": "C"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "3000.30",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-01-004",
+              "timestamp": "2026-10-01T09:15:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK01:D",
+                "bank_id": "BANK01",
+                "account_number": "D"
+              },
+              "amount": "1200.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-01-005",
+              "timestamp": "2026-10-01T09:20:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:E",
+                "bank_id": "BANK02",
+                "account_number": "E"
+              },
+              "amount": "1300.00",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-01-006",
+              "timestamp": "2026-10-01T09:25:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:F",
+                "bank_id": "BANK02",
+                "account_number": "F"
+              },
+              "amount": "1400.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-01-007",
+              "timestamp": "2026-10-01T09:30:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "100.01",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-02-001",
+              "timestamp": "2026-10-02T09:00:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "1000.10",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-02-002",
+              "timestamp": "2026-10-02T09:05:00Z",
+              "source": {
+                "account_id": "BANK01:B",
+                "bank_id": "BANK01",
+                "account_number": "B"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "2000.20",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-02-003",
+              "timestamp": "2026-10-02T09:10:00Z",
+              "source": {
+                "account_id": "BANK01:C",
+                "bank_id": "BANK01",
+                "account_number": "C"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "3000.30",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-02-004",
+              "timestamp": "2026-10-02T09:15:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK01:D",
+                "bank_id": "BANK01",
+                "account_number": "D"
+              },
+              "amount": "1200.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-02-005",
+              "timestamp": "2026-10-02T09:20:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:E",
+                "bank_id": "BANK02",
+                "account_number": "E"
+              },
+              "amount": "1300.00",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-02-006",
+              "timestamp": "2026-10-02T09:25:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:F",
+                "bank_id": "BANK02",
+                "account_number": "F"
+              },
+              "amount": "1400.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-02-007",
+              "timestamp": "2026-10-02T09:30:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "100.01",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-03-001",
+              "timestamp": "2026-10-03T09:00:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "1000.10",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-03-002",
+              "timestamp": "2026-10-03T09:05:00Z",
+              "source": {
+                "account_id": "BANK01:B",
+                "bank_id": "BANK01",
+                "account_number": "B"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "2000.20",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-03-003",
+              "timestamp": "2026-10-03T09:10:00Z",
+              "source": {
+                "account_id": "BANK01:C",
+                "bank_id": "BANK01",
+                "account_number": "C"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "3000.30",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-03-004",
+              "timestamp": "2026-10-03T09:15:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK01:D",
+                "bank_id": "BANK01",
+                "account_number": "D"
+              },
+              "amount": "1200.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-03-005",
+              "timestamp": "2026-10-03T09:20:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:E",
+                "bank_id": "BANK02",
+                "account_number": "E"
+              },
+              "amount": "1300.00",
+              "currency": "EUR",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-03-006",
+              "timestamp": "2026-10-03T09:25:00Z",
+              "source": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "target": {
+                "account_id": "BANK02:F",
+                "bank_id": "BANK02",
+                "account_number": "F"
+              },
+              "amount": "1400.00",
+              "currency": "USD",
+              "payment_format": "Wire"
+            },
+            {
+              "transaction_id": "tx-03-007",
+              "timestamp": "2026-10-03T09:30:00Z",
+              "source": {
+                "account_id": "BANK01:A",
+                "bank_id": "BANK01",
+                "account_number": "A"
+              },
+              "target": {
+                "account_id": "BANK01:HUB",
+                "bank_id": "BANK01",
+                "account_number": "HUB"
+              },
+              "amount": "100.01",
+              "currency": "USD",
+              "payment_format": "Wire"
+            }
+          ],
+          "totals_by_currency": [
+            {
+              "currency": "EUR",
+              "amount": "12900.90",
+              "transaction_count": 6
+            },
+            {
+              "currency": "USD",
+              "amount": "17100.93",
+              "transaction_count": 15
+            }
+          ],
+          "patterns": [
+            {
+              "kind": "fan_in",
+              "account_id": "BANK01:HUB",
+              "distinct_counterparties": 3,
+              "transaction_ids": [
+                "tx-01-001",
+                "tx-01-002",
+                "tx-01-003",
+                "tx-01-007",
+                "tx-02-001",
+                "tx-02-002",
+                "tx-02-003",
+                "tx-02-007",
+                "tx-03-001",
+                "tx-03-002",
+                "tx-03-003",
+                "tx-03-007"
+              ]
+            },
+            {
+              "kind": "fan_out",
+              "account_id": "BANK01:HUB",
+              "distinct_counterparties": 3,
+              "transaction_ids": [
+                "tx-01-004",
+                "tx-01-005",
+                "tx-01-006",
+                "tx-02-004",
+                "tx-02-005",
+                "tx-02-006",
+                "tx-03-004",
+                "tx-03-005",
+                "tx-03-006"
+              ]
+            }
+          ],
+          "aggregation_scope": "full_neighborhood_before_display_limits"
+        },
+        "model_explanation": {
+          "method": "mock_fixture",
+          "is_mock": true,
+          "note": "UI 연동용 고정 중요도이며 GNNExplainer 계산 결과가 아닙니다.",
+          "edges": [
+            {
+              "transaction_id": "tx-01-004",
+              "importance": 0.95
+            }
+          ]
+        },
+        "missing_information": [
+          "reporting_institution",
+          "customer_identity",
+          "transaction_purpose"
+        ],
+        "review_status": "not_generated",
+        "note": "합성 근거 입력입니다. 보고서 생성·검토·다운로드는 보고서 담당 모듈에서 구현합니다."
+      }
+    }
+  ]
+}

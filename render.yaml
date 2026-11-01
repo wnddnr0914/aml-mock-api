@@ -1,0 +1,22 @@
+# Put this file at the repository root together with main.py.
+# Free instances lose SQLite data on spin-down/restart/redeploy.
+services:
+  - type: web
+    name: aml-mock-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /healthz
+    autoDeployTrigger: off
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: API_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: http://localhost:3000,http://localhost:5173
+      - key: DATA_DIR
+        value: ./data
+      - key: MOCK_STAGE_DELAY_SECONDS
+        value: "0.6"
