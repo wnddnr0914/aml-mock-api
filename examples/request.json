@@ -1,11 +1,9 @@
 {
-  "start_date": "2026-10-01",
-  "end_date": "2026-10-03",
-  "threshold": 0.8,
-  "analysis_cutoff": "2026-10-04T00:00:00Z",
-  "history_days": 1,
-  "graph_hops": 2,
-  "max_graph_nodes": 50,
-  "max_graph_edges": 150,
-  "mock_scenario": "success"
+  "tx_ids": [
+    "TX_99198",
+    "TX_99199",
+    "TX_99200",
+    "TX_99201"
+  ],
+  "threshold": 0.8
 }

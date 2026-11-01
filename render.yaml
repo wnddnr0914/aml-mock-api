@@ -1,5 +1,4 @@
-# Put this file at the repository root together with main.py.
-# Free instances lose SQLite data on spin-down/restart/redeploy.
+# 기존 aml-mock-api 서비스에 교체 배포할 수 있도록 이름과 환경변수 이름 유지.
 services:
   - type: web
     name: aml-mock-api
@@ -16,7 +15,3 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: http://localhost:3000,http://localhost:5173
-      - key: DATA_DIR
-        value: ./data
-      - key: MOCK_STAGE_DELAY_SECONDS
-        value: "0.6"

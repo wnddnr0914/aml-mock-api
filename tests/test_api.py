@@ -1,4 +1,5 @@
-"""stdlib만 사용하는 실제 HTTP 통합 검증: python -m unittest discover -s tests -v."""
+"""표준 라이브러리만 사용하는 GNN Mock 실제 HTTP 및 fixture 검증."""
+import copy
 import json
 import os
 from pathlib import Path
@@ -8,20 +9,21 @@ import sys
 import tempfile
 import time
 import unittest
-from decimal import Decimal
 from urllib.error import HTTPError, URLError
 from urllib.request import ProxyHandler, Request, build_opener
 
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from main import MockPredictor
+
+GOLDEN_IDS = ["TX_99198", "TX_99199", "TX_99200", "TX_99201"]
 
 
 class Server:
-    def __init__(self, delay="0.03"):
-        # 일부 Windows sandbox의 시스템 TEMP는 생성 후 쓰기가 제한된다.
-        self.temp = tempfile.TemporaryDirectory(prefix="aml-mock-http-", dir=ROOT / "tests")
+    def __init__(self, api_key="test-key"):
+        self.temp = tempfile.TemporaryDirectory(prefix="gnn-mock-http-", dir=ROOT / "tests")
         self.directory = Path(self.temp.name)
-        self.delay = delay
+        self.api_key = api_key
         self.process = None
         self.log = None
         self.opener = build_opener(ProxyHandler({}))
@@ -31,23 +33,19 @@ class Server:
             probe.bind(("127.0.0.1", 0))
             port = probe.getsockname()[1]
         self.base = f"http://127.0.0.1:{port}"
-        env = dict(os.environ, DATA_DIR=str(self.directory / "data"), API_KEY="test-key",
-                   MOCK_STAGE_DELAY_SECONDS=self.delay,
-                   CORS_ORIGINS="http://localhost:5173")
+        env = dict(os.environ, API_KEY=self.api_key, CORS_ORIGINS="http://localhost:5173")
         self.log = (self.directory / "server.log").open("ab")
         self.process = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1",
-             "--port", str(port), "--workers", "1", "--log-level", "info"],
+            [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(port),
+             "--workers", "1", "--log-level", "info"],
             cwd=ROOT, env=env, stdout=self.log, stderr=subprocess.STDOUT,
         )
         deadline = time.monotonic() + 20
         last_error = None
         while time.monotonic() < deadline:
             try:
-                last_response = self.request("GET", "/healthz", authenticated=False)
-                if last_response[0] == 200:
+                if self.request("GET", "/healthz", authenticated=False)[0] == 200:
                     return self
-                last_error = repr(last_response)
             except (URLError, TimeoutError, ConnectionError) as exc:
                 last_error = repr(exc)
             if self.process.poll() is not None:
@@ -81,9 +79,8 @@ class Server:
         self.close()
 
     def request(self, method, path, body=None, *, authenticated=True, headers=None):
-        request_headers = {"X-API-Key": "test-key"} if authenticated else {}
-        if headers:
-            request_headers.update(headers)
+        request_headers = {"X-API-Key": self.api_key} if authenticated else {}
+        request_headers.update(headers or {})
         data = None
         if body is not None:
             data = json.dumps(body).encode("utf-8")
@@ -98,32 +95,8 @@ class Server:
             content = json.loads(raw) if "application/json" in response.headers.get("Content-Type", "") else raw.decode()
             return response.status, content, response.headers
 
-    def submit(self, body=None, headers=None):
-        code, result, response_headers = self.request("POST", "/api/v1/runs", body or {}, headers=headers)
-        if code != 202:
-            raise AssertionError((code, result))
-        return result, response_headers
-
-    def wait(self, run_id):
-        deadline = time.monotonic() + 10
-        while time.monotonic() < deadline:
-            code, status, _ = self.request("GET", f"/api/v1/runs/{run_id}")
-            if code != 200:
-                raise AssertionError((code, status))
-            if status["status"] in {"succeeded", "failed"}:
-                return status
-            time.sleep(0.02)
-        raise AssertionError("분석이 제한 시간 안에 종료되지 않았습니다")
-
-    def complete(self, body=None):
-        run, _ = self.submit(body)
-        status = self.wait(run["run_id"])
-        if status["status"] != "succeeded":
-            raise AssertionError(status)
-        code, result, _ = self.request("GET", run["results_url"])
-        if code != 200:
-            raise AssertionError((code, result))
-        return status, result
+    def detect(self, tx_ids=GOLDEN_IDS, threshold=0.8):
+        return self.request("POST", "/api/v1/detect", {"tx_ids": tx_ids, "threshold": threshold})
 
 
 class ApiTests(unittest.TestCase):
@@ -135,207 +108,146 @@ class ApiTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.server.close()
 
-    def test_health_and_exactly_three_documented_endpoints(self):
+    def test_health_swagger_has_one_business_endpoint_and_legacy_is_absent(self):
         code, health, _ = self.server.request("GET", "/healthz", authenticated=False)
-        self.assertEqual((code, health["status"]), (200, "ok"))
+        self.assertEqual((code, health), (200, {"status": "ok", "is_mock": True}))
         code, schema, _ = self.server.request("GET", "/openapi.json", authenticated=False)
         self.assertEqual(code, 200)
-        self.assertEqual(set(schema["paths"]), {
-            "/api/v1/runs", "/api/v1/runs/{run_id}", "/api/v1/runs/{run_id}/results"})
+        self.assertEqual(set(schema["paths"]), {"/api/v1/detect"})
+        self.assertEqual(set(schema["paths"]["/api/v1/detect"]), {"post"})
         self.assertEqual(self.server.request("GET", "/docs", authenticated=False)[0], 200)
+        for path in ("/api/v1/runs", "/api/v1/subgraph/TX_99201", "/api/v1/report/generate"):
+            with self.subTest(path=path):
+                self.assertEqual(self.server.request("POST", path, {})[0], 404)
 
-    def test_authentication_and_unknown_run(self):
-        for path, method, body in [("/api/v1/runs", "POST", {}),
-                                   ("/api/v1/runs/missing", "GET", None),
-                                   ("/api/v1/runs/missing/results", "GET", None)]:
-            for headers in ({}, {"X-API-Key": "wrong-key"}):
-                with self.subTest(path=path, headers=headers):
-                    code, error, _ = self.server.request(method, path, body, authenticated=False, headers=headers)
-                    self.assertEqual((code, error["error"]["code"]), (401, "UNAUTHORIZED"))
-        code, error, _ = self.server.request("GET", "/api/v1/runs/missing")
-        self.assertEqual((code, error["error"]["code"]), (404, "RUN_NOT_FOUND"))
-
-    def test_success_lifecycle_and_versions(self):
-        run, headers = self.server.submit()
-        self.assertEqual((run["status"], run["progress"]), ("queued", 0))
-        self.assertEqual(headers["Location"], run["status_url"])
-        self.assertEqual(headers["Retry-After"], "1")
-        status = self.server.wait(run["run_id"])
-        self.assertEqual((status["status"], status["stage"], status["progress"]), ("succeeded", "completed", 100))
-        self.assertIsNotNone(status["started_at"])
-        self.assertIsNotNone(status["finished_at"])
-        self.assertLessEqual(status["created_at"], status["started_at"])
-        self.assertLessEqual(status["started_at"], status["finished_at"])
-        code, result, _ = self.server.request("GET", run["results_url"])
+    def test_golden_case_returns_four_scores_and_one_detection(self):
+        code, result, _ = self.server.detect()
         self.assertEqual(code, 200)
-        self.assertEqual(result["run_id"], run["run_id"])
-        self.assertEqual(result["versions"], status["versions"])
-        self.assertTrue(result["versions"]["is_mock"])
-        self.assertEqual(result["dataset_timezone"], "UTC")
-        self.assertEqual(result["summary"]["transaction_count"], 24)
-        self.assertEqual(result["total"], 12)
+        self.assertTrue(result["is_mock"])
+        self.assertEqual(result["model_version"], "gnn-mock-v1")
+        self.assertEqual(result["threshold"], 0.8)
+        predictions = result["predictions"]
+        self.assertEqual([p["tx_id"] for p in predictions], GOLDEN_IDS)
+        self.assertEqual([p["anomaly_score"] for p in predictions], [0.42, 0.63, 0.58, 0.94])
+        self.assertEqual([p["tx_id"] for p in predictions if p["is_detected"]], ["TX_99201"])
 
-    def test_pending_results_are_409(self):
-        with Server(delay="0.5") as server:
-            run, _ = server.submit()
-            code, error, _ = server.request("GET", run["results_url"])
-            self.assertEqual((code, error["error"]["code"]), (409, "RESULTS_NOT_READY"))
-            self.assertIn(error["status"], {"queued", "running"})
-            self.assertTrue(error["error"]["retryable"])
+    def test_selected_transaction_and_default_threshold(self):
+        code, result, _ = self.server.request("POST", "/api/v1/detect", {"tx_ids": ["TX_99201"]})
+        self.assertEqual(code, 200)
+        self.assertEqual(result["threshold"], 0.8)
+        self.assertEqual(result["predictions"], [{"tx_id": "TX_99201", "anomaly_score": 0.94, "is_detected": True}])
 
-    def test_empty_is_success_with_original_period_summary(self):
-        status, result = self.server.complete({"mock_scenario": "empty"})
-        self.assertEqual(status["status"], "succeeded")
-        self.assertEqual((result["total"], result["items"], result["has_more"]), (0, [], False))
-        self.assertEqual(result["summary"]["transaction_count"], 24)
-        self.assertEqual(result["summary"]["detected_transaction_count"], 0)
+    def test_prediction_order_follows_request(self):
+        ids = ["TX_99201", "TX_99198", "TX_99200"]
+        code, result, _ = self.server.detect(ids)
+        self.assertEqual(code, 200)
+        self.assertEqual([p["tx_id"] for p in result["predictions"]], ids)
+        self.assertEqual([p["anomaly_score"] for p in result["predictions"]], [0.94, 0.42, 0.58])
 
-    def test_failure_has_status_error_and_no_result(self):
-        run, _ = self.server.submit({"mock_scenario": "failure"})
-        status = self.server.wait(run["run_id"])
-        self.assertEqual(status["status"], "failed")
-        self.assertEqual(status["error"]["code"], "MOCK_PIPELINE_FAILED")
-        self.assertLess(status["progress"], 100)
-        code, error, _ = self.server.request("GET", run["results_url"])
-        self.assertEqual((code, error["error"]["code"], error["status"]), (409, "RUN_FAILED", "failed"))
+    def test_threshold_changes_only_flags_and_includes_equal_score(self):
+        for threshold, detected in ((0, 4), (0.94, 1), (0.95, 0), (1, 0)):
+            with self.subTest(threshold=threshold):
+                code, result, _ = self.server.detect(threshold=threshold)
+                self.assertEqual(code, 200)
+                self.assertEqual([p["anomaly_score"] for p in result["predictions"]], [0.42, 0.63, 0.58, 0.94])
+                self.assertEqual(sum(p["is_detected"] for p in result["predictions"]), detected)
 
-    def test_invalid_inputs_are_structured_422(self):
-        invalid = [
-            {"start_date": "2026-09-30"}, {"end_date": "2026-10-04"},
-            {"start_date": "2026-10-03", "end_date": "2026-10-01"},
-            {"threshold": 1.1}, {"threshold": -0.1}, {"unknown": True},
-            {"analysis_cutoff": "2026-10-01T09:00:00"},
-            {"analysis_cutoff": "2026-10-01T00:00:00Z"},
-            {"analysis_cutoff": "2026-10-04T00:00:01Z"},
-            {"max_graph_nodes": 1}, {"max_graph_edges": 0},
-            {"mock_scenario": "unknown"},
+    def test_transaction_id_validation(self):
+        invalid_bodies = [
+            {}, {"tx_ids": []}, {"tx_ids": ["TX_99201", "TX_99201"]},
+            {"tx_ids": [""]}, {"tx_ids": ["TX/99201"]}, {"tx_ids": ["a" * 65]},
+            {"tx_ids": [1]}, {"tx_ids": "TX_99201"},
+            {"tx_ids": ["TX_99201"], "start_date": "2026-10-01"},
+            {"tx_ids": [f"TX_NEW_{i}" for i in range(1001)]},
         ]
-        for body in invalid:
-            with self.subTest(body=body):
-                code, error, _ = self.server.request("POST", "/api/v1/runs", body)
-                self.assertEqual((code, error["error"]["code"]), (422, "VALIDATION_ERROR"))
-                self.assertTrue(error["details"])
-        for query in ("limit=101", "limit=0", "offset=-1"):
-            self.assertEqual(self.server.request("GET", f"/api/v1/runs/missing/results?{query}")[0], 422)
+        for body in invalid_bodies:
+            with self.subTest(body=str(body)[:90]):
+                code, result, _ = self.server.request("POST", "/api/v1/detect", body)
+                self.assertEqual((code, result["error"]["code"]), (422, "VALIDATION_ERROR"))
+                self.assertTrue(result["error"]["details"])
+        code, _, _ = self.server.detect([f"TX_NEW_{i}" for i in range(1000)])
+        self.assertEqual(code, 404)  # 1000개는 목록 길이 검증을 통과하고 ID 존재 확인으로 진행한다.
 
-    def test_cutoff_is_exclusive_for_targets_and_evidence(self):
-        _, result = self.server.complete({"start_date": "2026-10-01", "end_date": "2026-10-01",
-                                          "analysis_cutoff": "2026-10-01T09:05:00Z"})
-        self.assertEqual(result["summary"]["transaction_count"], 1)
-        self.assertEqual([x["transaction"]["transaction_id"] for x in result["items"]], ["tx-01-001"])
-        self.assertEqual([x["transaction_id"] for x in result["items"][0]["evidence"]["transactions"]], ["tx-01-001"])
+    def test_threshold_validation_is_finite_numeric_and_bounded(self):
+        for threshold in (-0.001, 1.001, float("nan"), float("inf"), "0.8", True, None):
+            with self.subTest(threshold=threshold):
+                code, result, _ = self.server.detect(["TX_99201"], threshold=threshold)
+                self.assertEqual((code, result["error"]["code"]), (422, "VALIDATION_ERROR"))
 
-    def test_threshold_is_inclusive(self):
-        _, exact = self.server.complete({"threshold": 0.93})
-        self.assertEqual(exact["total"], 3)
-        self.assertTrue(all(item["suspicion_score"] == 0.93 for item in exact["items"]))
-        _, above = self.server.complete({"threshold": 0.930001})
-        self.assertEqual(above["total"], 0)
+    def test_unknown_id_rejects_whole_request_without_partial_predictions(self):
+        for ids in (["TX_99201", "TX_UNKNOWN"], ["TX_MISSING", "TX_99198", "TX_UNKNOWN"]):
+            with self.subTest(ids=ids):
+                code, result, _ = self.server.detect(ids)
+                self.assertEqual((code, result["error"]["code"]), (404, "UNKNOWN_TX_ID"))
+                self.assertEqual(result["error"]["unknown_tx_ids"], [tx for tx in ids if tx not in GOLDEN_IDS])
+                self.assertNotIn("predictions", result)
 
-    def test_currency_totals_and_repeated_transactions_are_preserved(self):
-        _, result = self.server.complete()
-        totals = {x["currency"]: (Decimal(x["amount"]), x["transaction_count"])
-                  for x in result["summary"]["totals_by_currency"]}
-        self.assertEqual(totals, {"EUR": (Decimal("13140.90"), 9), "USD": (Decimal("17100.93"), 15)})
-        item = result["items"][0]
-        transactions = item["evidence"]["transactions"]
-        self.assertEqual(len(transactions), 21)
-        self.assertEqual(len({x["transaction_id"] for x in transactions}), 21)
-        pair = [x for x in transactions if x["source"]["account_number"] == "A"
-                and x["target"]["account_number"] == "HUB"]
-        self.assertEqual(len(pair), 6)
-        self.assertEqual({x["amount"] for x in pair}, {"1000.10", "100.01"})
-        self.assertTrue(any(not edge["is_detected"] for edge in item["graph"]["edges"]))
-
-    def test_display_limits_preserve_anchor_and_full_report_evidence(self):
-        _, result = self.server.complete({"max_graph_nodes": 2, "max_graph_edges": 1})
-        for item in result["items"]:
-            graph, evidence, report = item["graph"], item["evidence"], item["report_input"]
-            anchor = item["transaction"]["transaction_id"]
-            self.assertEqual((len(graph["nodes"]), len(graph["edges"])), (2, 1))
-            self.assertTrue(graph["truncated"])
-            self.assertEqual(graph["edges"][0]["transaction"]["transaction_id"], anchor)
-            self.assertTrue(graph["edges"][0]["is_selected"])
-            self.assertEqual(graph["omitted_edges"] + len(graph["edges"]), graph["total_edges"])
-            self.assertEqual(len(evidence["transactions"]), 21)
-            self.assertEqual(report["evidence"], evidence)
-            self.assertEqual(report["evidence_id"], item["evidence_id"])
-            self.assertEqual(report["run_id"], result["run_id"])
-            self.assertTrue(report["missing_information"])
-            self.assertEqual(item["model_explanation"]["method"], "mock_fixture")
-            self.assertTrue(item["model_explanation"]["is_mock"])
-
-    def test_history_scope_does_not_expand_target_period(self):
-        body = {"start_date": "2026-10-02", "end_date": "2026-10-02", "history_days": 1}
-        _, with_history = self.server.complete(body)
-        _, without_history = self.server.complete(dict(body, history_days=0))
-        self.assertEqual(with_history["summary"]["transaction_count"], 8)
-        self.assertEqual(with_history["total"], 4)
-        self.assertTrue(all(x["transaction"]["transaction_id"].startswith("tx-02-") for x in with_history["items"]))
-        self.assertEqual(len(with_history["items"][0]["evidence"]["transactions"]), 14)
-        self.assertTrue(with_history["items"][0]["evidence"]["history_included"])
-        self.assertEqual(len(without_history["items"][0]["evidence"]["transactions"]), 7)
-        self.assertFalse(without_history["items"][0]["evidence"]["history_included"])
-
-    def test_pagination_is_stable_and_summary_is_global(self):
-        status, complete = self.server.complete()
-        all_ids = []
-        for offset in range(0, complete["total"], 2):
-            code, page, _ = self.server.request("GET", status["results_url"] + f"?offset={offset}&limit=2")
+    def test_auth_required_when_configured_and_optional_without_key(self):
+        for headers in ({}, {"X-API-Key": "wrong"}):
+            with self.subTest(headers=headers):
+                code, result, _ = self.server.request("POST", "/api/v1/detect", {"tx_ids": ["TX_99201"]}, authenticated=False, headers=headers)
+                self.assertEqual((code, result["error"]["code"]), (401, "UNAUTHORIZED"))
+        with Server(api_key="") as local:
+            code, result, _ = local.request("POST", "/api/v1/detect", {"tx_ids": ["TX_99201"]}, authenticated=False)
             self.assertEqual(code, 200)
-            self.assertEqual(page["summary"], complete["summary"])
-            self.assertEqual(page["total"], complete["total"])
-            self.assertEqual(page["has_more"], offset + 2 < complete["total"])
-            self.assertEqual(page["next_offset"], offset + 2 if page["has_more"] else None)
-            all_ids.extend(x["transaction"]["transaction_id"] for x in page["items"])
-        self.assertEqual(all_ids, [x["transaction"]["transaction_id"] for x in complete["items"]])
-        self.assertEqual(len(all_ids), len(set(all_ids)))
-        self.assertEqual(complete["items"], sorted(complete["items"], key=lambda x: (-x["suspicion_score"], x["transaction"]["transaction_id"])))
-        _, beyond, _ = self.server.request("GET", status["results_url"] + "?offset=999")
-        self.assertEqual((beyond["items"], beyond["has_more"], beyond["total"]), ([], False, complete["total"]))
+            self.assertEqual(result["predictions"][0]["anomaly_score"], 0.94)
 
-    def test_idempotency_replays_normalized_request_and_rejects_conflict(self):
-        headers = {"Idempotency-Key": "retry-same-analysis"}
-        original, _ = self.server.submit(headers=headers)
-        replay, _ = self.server.submit({"threshold": 0.8}, headers=headers)
-        self.assertEqual(original["run_id"], replay["run_id"])
-        code, error, _ = self.server.request("POST", "/api/v1/runs", {"threshold": 0.9}, headers=headers)
-        self.assertEqual((code, error["error"]["code"]), (409, "IDEMPOTENCY_CONFLICT"))
-        other, _ = self.server.submit()
-        self.assertNotEqual(original["run_id"], other["run_id"])
-        self.server.wait(original["run_id"])
-        self.server.wait(other["run_id"])
-        for run in (original, other):
-            _, result, _ = self.server.request("GET", run["results_url"])
-            self.assertTrue(all(x["report_input"]["run_id"] == run["run_id"] for x in result["items"]))
-
-    def test_cors_allows_configured_frontend_and_headers(self):
-        code, _, headers = self.server.request("OPTIONS", "/api/v1/runs", authenticated=False, headers={
+    def test_cors_allows_configured_frontend_and_api_key_header(self):
+        code, _, headers = self.server.request("OPTIONS", "/api/v1/detect", authenticated=False, headers={
             "Origin": "http://localhost:5173", "Access-Control-Request-Method": "POST",
-            "Access-Control-Request-Headers": "content-type,x-api-key,idempotency-key"})
+            "Access-Control-Request-Headers": "content-type,x-api-key"})
         self.assertEqual(code, 200)
         self.assertEqual(headers["Access-Control-Allow-Origin"], "http://localhost:5173")
-        _, _, denied = self.server.request("GET", "/healthz", headers={"Origin": "https://unlisted.example"})
-        self.assertIsNone(denied.get("Access-Control-Allow-Origin"))
-        _, _, allowed = self.server.request("GET", "/healthz", headers={"Origin": "http://localhost:5173"})
-        self.assertIn("Location", allowed["Access-Control-Expose-Headers"])
+        code, _, headers = self.server.request("POST", "/api/v1/detect", {"tx_ids": ["TX_99201"]}, headers={"Origin": "https://unlisted.example"})
+        self.assertEqual(code, 200)
+        self.assertIsNone(headers.get("Access-Control-Allow-Origin"))
 
-    def test_restart_preserves_results_and_fails_interrupted_work(self):
-        with Server(delay="0.2") as server:
-            completed, _ = server.submit(headers={"Idempotency-Key": "persistent-completed"})
-            self.assertEqual(server.wait(completed["run_id"])["status"], "succeeded")
-            _, saved, _ = server.request("GET", completed["results_url"])
-            interrupted, _ = server.submit(headers={"Idempotency-Key": "persistent-interrupted"})
-            server.stop()
-            server.start()
-            _, restored, _ = server.request("GET", completed["results_url"])
-            self.assertEqual(restored, saved)
-            failed = server.wait(interrupted["run_id"])
-            self.assertEqual((failed["status"], failed["error"]["code"]), ("failed", "SERVER_RESTARTED"))
-            replay, _ = server.submit(headers={"Idempotency-Key": "persistent-completed"})
-            self.assertEqual(replay["run_id"], completed["run_id"])
-            code, error, _ = server.request("GET", interrupted["results_url"])
-            self.assertEqual((code, error["error"]["code"]), (409, "RUN_FAILED"))
+    def test_response_contains_only_inference_contract(self):
+        code, result, _ = self.server.detect()
+        self.assertEqual(code, 200)
+        self.assertEqual(set(result), {"is_mock", "model_version", "threshold", "predictions"})
+        for item in result["predictions"]:
+            self.assertEqual(set(item), {"tx_id", "anomaly_score", "is_detected"})
+        for forbidden in ("graph", "evidence", "report_input", "model_explanation", "run_id", "stage"):
+            self.assertNotIn(forbidden, json.dumps(result))
+
+
+class FixtureTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="gnn-mock-fixture-", dir=ROOT / "tests")
+        self.path = Path(self.temp.name) / "fixture.json"
+        self.original = json.loads((ROOT / "golden_case.json").read_text(encoding="utf-8"))
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def assert_invalid(self, data):
+        self.path.write_text(json.dumps(data), encoding="utf-8")
+        with self.assertRaises((ValueError, KeyError, TypeError)):
+            MockPredictor(self.path)
+
+    def test_fixture_rejects_out_of_range_or_non_finite_scores(self):
+        for value in (-0.01, 1.01, float("nan"), "0.94"):
+            with self.subTest(value=value):
+                data = copy.deepcopy(self.original)
+                data["mock_model"]["scores"]["TX_99201"] = value
+                self.assert_invalid(data)
+
+    def test_fixture_requires_unique_matching_ids_and_model_version(self):
+        for mutation in ("missing_score", "extra_score", "duplicate_id", "empty_transactions", "empty_version"):
+            with self.subTest(mutation=mutation):
+                data = copy.deepcopy(self.original)
+                if mutation == "missing_score":
+                    del data["mock_model"]["scores"]["TX_99201"]
+                elif mutation == "extra_score":
+                    data["mock_model"]["scores"]["TX_UNKNOWN"] = 0.5
+                elif mutation == "duplicate_id":
+                    data["transactions"].append(copy.deepcopy(data["transactions"][0]))
+                elif mutation == "empty_transactions":
+                    data["transactions"] = []
+                else:
+                    data["mock_model"]["model_version"] = " "
+                self.assert_invalid(data)
 
 
 if __name__ == "__main__":

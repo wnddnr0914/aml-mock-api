@@ -1,0 +1,25 @@
+{
+  "case_id": "synthetic-fan-in-v1",
+  "is_synthetic": true,
+  "description": "첨부 설계안의 금액 구조를 참고해 직접 만든 연동용 합성 데이터입니다. IBM 원본 사례나 범죄 확정 사례가 아닙니다.",
+  "timezone": "UTC",
+  "selected_tx_id": "TX_99201",
+  "nodes": [
+    {"account_id": "BANK_DEMO:A", "bank_id": "BANK_DEMO", "account_number": "A", "label": "계좌 A"},
+    {"account_id": "BANK_DEMO:B", "bank_id": "BANK_DEMO", "account_number": "B", "label": "계좌 B"},
+    {"account_id": "BANK_DEMO:C", "bank_id": "BANK_DEMO", "account_number": "C", "label": "계좌 C"},
+    {"account_id": "BANK_DEMO:D", "bank_id": "BANK_DEMO", "account_number": "D", "label": "계좌 D"},
+    {"account_id": "BANK_DEMO:E", "bank_id": "BANK_DEMO", "account_number": "E", "label": "계좌 E"}
+  ],
+  "transactions": [
+    {"tx_id": "TX_99198", "source": "BANK_DEMO:A", "target": "BANK_DEMO:D", "timestamp": "2026-10-01T09:00:00Z", "amount": "9900000.00", "currency": "KRW"},
+    {"tx_id": "TX_99199", "source": "BANK_DEMO:B", "target": "BANK_DEMO:D", "timestamp": "2026-10-01T09:05:00Z", "amount": "9900000.00", "currency": "KRW"},
+    {"tx_id": "TX_99200", "source": "BANK_DEMO:C", "target": "BANK_DEMO:D", "timestamp": "2026-10-01T09:10:00Z", "amount": "9900000.00", "currency": "KRW"},
+    {"tx_id": "TX_99201", "source": "BANK_DEMO:D", "target": "BANK_DEMO:E", "timestamp": "2026-10-01T09:20:00Z", "amount": "29000000.00", "currency": "KRW"}
+  ],
+  "mock_model": {
+    "model_version": "gnn-mock-v1",
+    "note": "추론 출력만 대체하는 고정 점수입니다. 모델 학습·평가 정답이나 입력 특징, GNNExplainer 중요도가 아닙니다.",
+    "scores": {"TX_99198": 0.42, "TX_99199": 0.63, "TX_99200": 0.58, "TX_99201": 0.94}
+  }
+}

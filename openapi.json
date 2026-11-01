@@ -1,419 +1,167 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "AML Mock API",
-    "description": "GNN 개발 중 대시보드·보고서 병렬 개발용 합성 API. 지원 기간: 2026-10-01~03 UTC. 실제 GNN·LLM을 호출하지 않습니다. API_KEY 설정 시 Authorize에 X-API-Key를 입력하세요. 단일 worker로 실행하세요.",
-    "version": "1.0.0"
+    "title": "GNN Inference Mock API",
+    "description": "GNN 개발 동안 추론 인터페이스만 대체합니다. 거래 ID를 보내면 고정 점수를 즉시 반환합니다. 원본 그래프 조회·추출, 패턴 분석, GNNExplainer, 보고서 생성은 별도 모듈의 책임입니다. API_KEY 설정 시 Authorize에 키 값만 입력하세요.",
+    "version": "2.0.0"
   },
   "paths": {
-    "/api/v1/runs": {
+    "/api/v1/detect": {
       "post": {
         "tags": [
-          "Batch"
+          "GNN"
         ],
-        "summary": "1. 분석 실행 등록",
-        "operationId": "submit_run_api_v1_runs_post",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "idempotency-key",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 128
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Idempotency-Key"
-            }
-          }
-        ],
+        "summary": "거래 ID별 GNN Mock 점수 반환",
+        "operationId": "detect_api_v1_detect_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RunRequest"
+                "$ref": "#/components/schemas/DetectRequest"
               },
               "examples": {
-                "success": {
-                  "summary": "정상 완료",
+                "golden": {
+                  "summary": "골든 케이스 4거래",
                   "value": {
-                    "start_date": "2026-10-01",
-                    "end_date": "2026-10-03",
-                    "threshold": 0.8,
-                    "mock_scenario": "success"
+                    "tx_ids": [
+                      "TX_99198",
+                      "TX_99199",
+                      "TX_99200",
+                      "TX_99201"
+                    ],
+                    "threshold": 0.8
                   }
                 },
-                "empty": {
-                  "summary": "탐지 결과 없음",
+                "selected": {
+                  "summary": "선택 거래 1건",
                   "value": {
-                    "start_date": "2026-10-01",
-                    "end_date": "2026-10-03",
-                    "threshold": 0.8,
-                    "mock_scenario": "empty"
+                    "tx_ids": [
+                      "TX_99201"
+                    ],
+                    "threshold": 0.8
                   }
-                },
-                "failure": {
-                  "summary": "분석 실패",
-                  "value": {
-                    "start_date": "2026-10-01",
-                    "end_date": "2026-10-03",
-                    "threshold": 0.8,
-                    "mock_scenario": "failure"
-                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetectResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           }
         },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RunStatus"
-                }
-              }
-            }
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        }
-      }
-    },
-    "/api/v1/runs/{run_id}": {
-      "get": {
-        "tags": [
-          "Batch"
-        ],
-        "summary": "2. 분석 상태 조회",
-        "operationId": "get_run_api_v1_runs__run_id__get",
         "security": [
           {
             "APIKeyHeader": []
           }
-        ],
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RunStatus"
-                }
-              }
-            }
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        }
-      }
-    },
-    "/api/v1/runs/{run_id}/results": {
-      "get": {
-        "tags": [
-          "Batch"
-        ],
-        "summary": "3. 탐지 결과·거래망·보고서 근거 조회",
-        "operationId": "get_results_api_v1_runs__run_id__results_get",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Results"
-                }
-              }
-            }
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unauthorized"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Not Found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        }
+        ]
       }
     }
   },
   "components": {
     "schemas": {
-      "Account": {
+      "DetectRequest": {
         "properties": {
-          "account_id": {
-            "type": "string",
-            "title": "Account Id",
-            "description": "은행 ID와 계좌번호의 조합"
+          "tx_ids": {
+            "items": {
+              "type": "string",
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Tx Ids",
+            "description": "서버에 준비된 거래의 ID. 입력 순서대로 점수를 반환합니다."
           },
-          "bank_id": {
-            "type": "string",
-            "title": "Bank Id"
-          },
-          "account_number": {
-            "type": "string",
-            "title": "Account Number"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "account_id",
-          "bank_id",
-          "account_number"
-        ],
-        "title": "Account"
-      },
-      "CurrencyTotal": {
-        "properties": {
-          "currency": {
-            "type": "string",
-            "title": "Currency"
-          },
-          "amount": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Amount"
-          },
-          "transaction_count": {
-            "type": "integer",
-            "title": "Transaction Count"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "currency",
-          "amount",
-          "transaction_count"
-        ],
-        "title": "CurrencyTotal"
-      },
-      "Detection": {
-        "properties": {
-          "transaction": {
-            "$ref": "#/components/schemas/Transaction"
-          },
-          "suspicion_score": {
+          "threshold": {
             "type": "number",
             "maximum": 1.0,
             "minimum": 0.0,
-            "title": "Suspicion Score"
-          },
-          "is_detected": {
-            "type": "boolean",
-            "title": "Is Detected"
-          },
-          "evidence_id": {
-            "type": "string",
-            "title": "Evidence Id"
-          },
-          "observed_patterns": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Observed Patterns"
-          },
-          "graph": {
-            "$ref": "#/components/schemas/Graph"
-          },
-          "model_explanation": {
-            "$ref": "#/components/schemas/Explanation"
-          },
-          "evidence": {
-            "$ref": "#/components/schemas/Evidence"
-          },
-          "report_input": {
-            "$ref": "#/components/schemas/ReportInput"
+            "title": "Threshold",
+            "description": "anomaly_score >= threshold이면 is_detected=true",
+            "default": 0.8
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "transaction",
-          "suspicion_score",
-          "is_detected",
-          "evidence_id",
-          "observed_patterns",
-          "graph",
-          "model_explanation",
-          "evidence",
-          "report_input"
+          "tx_ids"
         ],
-        "title": "Detection"
+        "title": "DetectRequest"
+      },
+      "DetectResponse": {
+        "properties": {
+          "is_mock": {
+            "type": "boolean",
+            "title": "Is Mock",
+            "default": true
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "threshold": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Threshold"
+          },
+          "predictions": {
+            "items": {
+              "$ref": "#/components/schemas/Prediction"
+            },
+            "type": "array",
+            "title": "Predictions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model_version",
+          "threshold",
+          "predictions"
+        ],
+        "title": "DetectResponse"
       },
       "ErrorInfo": {
         "properties": {
@@ -425,10 +173,20 @@
             "type": "string",
             "title": "Message"
           },
-          "retryable": {
-            "type": "boolean",
-            "title": "Retryable",
-            "default": false
+          "unknown_tx_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unknown Tx Ids"
+          },
+          "details": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Details"
           }
         },
         "additionalProperties": false,
@@ -443,25 +201,6 @@
         "properties": {
           "error": {
             "$ref": "#/components/schemas/ErrorInfo"
-          },
-          "status": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Status"
-          },
-          "details": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Details"
           }
         },
         "additionalProperties": false,
@@ -471,743 +210,36 @@
         ],
         "title": "ErrorResponse"
       },
-      "Evidence": {
+      "Prediction": {
         "properties": {
-          "evidence_id": {
+          "tx_id": {
             "type": "string",
-            "title": "Evidence Id"
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Tx Id"
           },
-          "run_id": {
-            "type": "string",
-            "title": "Run Id"
-          },
-          "selected_transaction_id": {
-            "type": "string",
-            "title": "Selected Transaction Id"
-          },
-          "scope_start": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Scope Start"
-          },
-          "scope_end_exclusive": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Scope End Exclusive"
-          },
-          "history_included": {
-            "type": "boolean",
-            "title": "History Included"
-          },
-          "transactions": {
-            "items": {
-              "$ref": "#/components/schemas/Transaction"
-            },
-            "type": "array",
-            "title": "Transactions"
-          },
-          "totals_by_currency": {
-            "items": {
-              "$ref": "#/components/schemas/CurrencyTotal"
-            },
-            "type": "array",
-            "title": "Totals By Currency"
-          },
-          "patterns": {
-            "items": {
-              "$ref": "#/components/schemas/Pattern"
-            },
-            "type": "array",
-            "title": "Patterns"
-          },
-          "aggregation_scope": {
-            "type": "string",
-            "const": "full_neighborhood_before_display_limits",
-            "title": "Aggregation Scope",
-            "default": "full_neighborhood_before_display_limits"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "evidence_id",
-          "run_id",
-          "selected_transaction_id",
-          "scope_start",
-          "scope_end_exclusive",
-          "history_included",
-          "transactions",
-          "totals_by_currency",
-          "patterns"
-        ],
-        "title": "Evidence"
-      },
-      "Explanation": {
-        "properties": {
-          "method": {
-            "type": "string",
-            "const": "mock_fixture",
-            "title": "Method",
-            "default": "mock_fixture"
-          },
-          "is_mock": {
-            "type": "boolean",
-            "title": "Is Mock",
-            "default": true
-          },
-          "note": {
-            "type": "string",
-            "title": "Note",
-            "default": "UI 연동용 고정 중요도이며 GNNExplainer 계산 결과가 아닙니다."
-          },
-          "edges": {
-            "items": {
-              "$ref": "#/components/schemas/ExplanationEdge"
-            },
-            "type": "array",
-            "title": "Edges"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "edges"
-        ],
-        "title": "Explanation"
-      },
-      "ExplanationEdge": {
-        "properties": {
-          "transaction_id": {
-            "type": "string",
-            "title": "Transaction Id"
-          },
-          "importance": {
+          "anomaly_score": {
             "type": "number",
             "maximum": 1.0,
             "minimum": 0.0,
-            "title": "Importance"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "transaction_id",
-          "importance"
-        ],
-        "title": "ExplanationEdge"
-      },
-      "Graph": {
-        "properties": {
-          "neighborhood_direction": {
-            "type": "string",
-            "const": "both",
-            "title": "Neighborhood Direction",
-            "default": "both"
-          },
-          "hops": {
-            "type": "integer",
-            "title": "Hops"
-          },
-          "nodes": {
-            "items": {
-              "$ref": "#/components/schemas/GraphNode"
-            },
-            "type": "array",
-            "title": "Nodes"
-          },
-          "edges": {
-            "items": {
-              "$ref": "#/components/schemas/GraphEdge"
-            },
-            "type": "array",
-            "title": "Edges"
-          },
-          "total_nodes": {
-            "type": "integer",
-            "title": "Total Nodes"
-          },
-          "total_edges": {
-            "type": "integer",
-            "title": "Total Edges"
-          },
-          "omitted_nodes": {
-            "type": "integer",
-            "title": "Omitted Nodes"
-          },
-          "omitted_edges": {
-            "type": "integer",
-            "title": "Omitted Edges"
-          },
-          "truncated": {
-            "type": "boolean",
-            "title": "Truncated"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "hops",
-          "nodes",
-          "edges",
-          "total_nodes",
-          "total_edges",
-          "omitted_nodes",
-          "omitted_edges",
-          "truncated"
-        ],
-        "title": "Graph"
-      },
-      "GraphEdge": {
-        "properties": {
-          "transaction": {
-            "$ref": "#/components/schemas/Transaction"
-          },
-          "suspicion_score": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Suspicion Score"
+            "title": "Anomaly Score",
+            "description": "연동용 고정 의심 점수. 보정된 범죄 확률이 아닙니다."
           },
           "is_detected": {
             "type": "boolean",
-            "title": "Is Detected"
-          },
-          "is_selected": {
-            "type": "boolean",
-            "title": "Is Selected"
+            "title": "Is Detected",
+            "description": "모델 점수에 임계값을 적용한 후처리 결과"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "transaction",
-          "suspicion_score",
-          "is_detected",
-          "is_selected"
+          "tx_id",
+          "anomaly_score",
+          "is_detected"
         ],
-        "title": "GraphEdge"
-      },
-      "GraphNode": {
-        "properties": {
-          "account_id": {
-            "type": "string",
-            "title": "Account Id",
-            "description": "은행 ID와 계좌번호의 조합"
-          },
-          "bank_id": {
-            "type": "string",
-            "title": "Bank Id"
-          },
-          "account_number": {
-            "type": "string",
-            "title": "Account Number"
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "selected_source",
-              "selected_target",
-              "related"
-            ],
-            "title": "Role"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "account_id",
-          "bank_id",
-          "account_number",
-          "role"
-        ],
-        "title": "GraphNode"
-      },
-      "Pattern": {
-        "properties": {
-          "kind": {
-            "type": "string",
-            "enum": [
-              "fan_in",
-              "fan_out"
-            ],
-            "title": "Kind"
-          },
-          "account_id": {
-            "type": "string",
-            "title": "Account Id"
-          },
-          "distinct_counterparties": {
-            "type": "integer",
-            "title": "Distinct Counterparties"
-          },
-          "transaction_ids": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Transaction Ids"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "kind",
-          "account_id",
-          "distinct_counterparties",
-          "transaction_ids"
-        ],
-        "title": "Pattern"
-      },
-      "ReportInput": {
-        "properties": {
-          "run_id": {
-            "type": "string",
-            "title": "Run Id"
-          },
-          "evidence_id": {
-            "type": "string",
-            "title": "Evidence Id"
-          },
-          "selected_transaction_id": {
-            "type": "string",
-            "title": "Selected Transaction Id"
-          },
-          "versions": {
-            "$ref": "#/components/schemas/Versions"
-          },
-          "analysis_cutoff": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Analysis Cutoff"
-          },
-          "threshold": {
-            "type": "number",
-            "title": "Threshold"
-          },
-          "suspicion_score": {
-            "type": "number",
-            "title": "Suspicion Score"
-          },
-          "evidence": {
-            "$ref": "#/components/schemas/Evidence"
-          },
-          "model_explanation": {
-            "$ref": "#/components/schemas/Explanation"
-          },
-          "missing_information": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Missing Information"
-          },
-          "review_status": {
-            "type": "string",
-            "const": "not_generated",
-            "title": "Review Status",
-            "default": "not_generated"
-          },
-          "note": {
-            "type": "string",
-            "title": "Note",
-            "default": "합성 근거 입력입니다. 보고서 생성·검토·다운로드는 보고서 담당 모듈에서 구현합니다."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "run_id",
-          "evidence_id",
-          "selected_transaction_id",
-          "analysis_cutoff",
-          "threshold",
-          "suspicion_score",
-          "evidence",
-          "model_explanation"
-        ],
-        "title": "ReportInput"
-      },
-      "Results": {
-        "properties": {
-          "run_id": {
-            "type": "string",
-            "title": "Run Id"
-          },
-          "status": {
-            "type": "string",
-            "const": "succeeded",
-            "title": "Status",
-            "default": "succeeded"
-          },
-          "versions": {
-            "$ref": "#/components/schemas/Versions"
-          },
-          "parameters": {
-            "$ref": "#/components/schemas/RunRequest"
-          },
-          "dataset_timezone": {
-            "type": "string",
-            "const": "UTC",
-            "title": "Dataset Timezone",
-            "default": "UTC"
-          },
-          "generated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Generated At"
-          },
-          "summary": {
-            "$ref": "#/components/schemas/Summary"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          },
-          "has_more": {
-            "type": "boolean",
-            "title": "Has More"
-          },
-          "next_offset": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Offset"
-          },
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/Detection"
-            },
-            "type": "array",
-            "title": "Items"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "run_id",
-          "parameters",
-          "generated_at",
-          "summary",
-          "total",
-          "offset",
-          "limit",
-          "has_more",
-          "items"
-        ],
-        "title": "Results"
-      },
-      "RunRequest": {
-        "properties": {
-          "start_date": {
-            "type": "string",
-            "format": "date",
-            "title": "Start Date",
-            "description": "합성 UTC 데이터: 2026-10-01~03",
-            "default": "2026-10-01"
-          },
-          "end_date": {
-            "type": "string",
-            "format": "date",
-            "title": "End Date",
-            "default": "2026-10-03"
-          },
-          "threshold": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Threshold",
-            "default": 0.8
-          },
-          "analysis_cutoff": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Analysis Cutoff",
-            "description": "exclusive. 생략하면 종료일 다음날 00:00 UTC"
-          },
-          "history_days": {
-            "type": "integer",
-            "maximum": 3.0,
-            "minimum": 0.0,
-            "title": "History Days",
-            "default": 1
-          },
-          "graph_hops": {
-            "type": "integer",
-            "maximum": 2.0,
-            "minimum": 1.0,
-            "title": "Graph Hops",
-            "default": 2
-          },
-          "max_graph_nodes": {
-            "type": "integer",
-            "maximum": 50.0,
-            "minimum": 2.0,
-            "title": "Max Graph Nodes",
-            "default": 50
-          },
-          "max_graph_edges": {
-            "type": "integer",
-            "maximum": 150.0,
-            "minimum": 1.0,
-            "title": "Max Graph Edges",
-            "default": 150
-          },
-          "mock_scenario": {
-            "type": "string",
-            "enum": [
-              "success",
-              "empty",
-              "failure"
-            ],
-            "title": "Mock Scenario",
-            "default": "success"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "RunRequest"
-      },
-      "RunStatus": {
-        "properties": {
-          "run_id": {
-            "type": "string",
-            "title": "Run Id"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "queued",
-              "running",
-              "succeeded",
-              "failed"
-            ],
-            "title": "Status"
-          },
-          "stage": {
-            "type": "string",
-            "enum": [
-              "queued",
-              "scoring",
-              "building_evidence",
-              "saving",
-              "completed",
-              "failed"
-            ],
-            "title": "Stage"
-          },
-          "progress": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Progress"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Started At"
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finished At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "parameters": {
-            "$ref": "#/components/schemas/RunRequest"
-          },
-          "versions": {
-            "$ref": "#/components/schemas/Versions"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ErrorInfo"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "status_url": {
-            "type": "string",
-            "title": "Status Url"
-          },
-          "results_url": {
-            "type": "string",
-            "title": "Results Url"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "run_id",
-          "status",
-          "stage",
-          "progress",
-          "created_at",
-          "updated_at",
-          "parameters",
-          "status_url",
-          "results_url"
-        ],
-        "title": "RunStatus"
-      },
-      "Summary": {
-        "properties": {
-          "dataset_account_count": {
-            "type": "integer",
-            "title": "Dataset Account Count"
-          },
-          "active_account_count": {
-            "type": "integer",
-            "title": "Active Account Count"
-          },
-          "transaction_count": {
-            "type": "integer",
-            "title": "Transaction Count"
-          },
-          "detected_transaction_count": {
-            "type": "integer",
-            "title": "Detected Transaction Count"
-          },
-          "totals_by_currency": {
-            "items": {
-              "$ref": "#/components/schemas/CurrencyTotal"
-            },
-            "type": "array",
-            "title": "Totals By Currency"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "dataset_account_count",
-          "active_account_count",
-          "transaction_count",
-          "detected_transaction_count",
-          "totals_by_currency"
-        ],
-        "title": "Summary"
-      },
-      "Transaction": {
-        "properties": {
-          "transaction_id": {
-            "type": "string",
-            "title": "Transaction Id"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timestamp"
-          },
-          "source": {
-            "$ref": "#/components/schemas/Account"
-          },
-          "target": {
-            "$ref": "#/components/schemas/Account"
-          },
-          "amount": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Amount",
-            "description": "송금 원통화 금액. JSON에서는 십진 문자열"
-          },
-          "currency": {
-            "type": "string",
-            "title": "Currency"
-          },
-          "payment_format": {
-            "type": "string",
-            "title": "Payment Format",
-            "default": "Wire"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "transaction_id",
-          "timestamp",
-          "source",
-          "target",
-          "amount",
-          "currency"
-        ],
-        "title": "Transaction"
-      },
-      "Versions": {
-        "properties": {
-          "schema_version": {
-            "type": "string",
-            "title": "Schema Version",
-            "default": "1.0.0"
-          },
-          "is_mock": {
-            "type": "boolean",
-            "title": "Is Mock",
-            "default": true
-          },
-          "dataset_version": {
-            "type": "string",
-            "title": "Dataset Version",
-            "default": "synthetic-fixture-v1"
-          },
-          "model_version": {
-            "type": "string",
-            "title": "Model Version",
-            "default": "mock-gnn-v1"
-          },
-          "preprocessing_version": {
-            "type": "string",
-            "title": "Preprocessing Version",
-            "default": "mock-preprocessing-v1"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "Versions"
+        "title": "Prediction"
       }
     },
     "securitySchemes": {

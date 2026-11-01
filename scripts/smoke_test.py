@@ -1,8 +1,7 @@
-"""외부 라이브러리 없이 실행→상태 폴링→결과 조회. API_KEY 환경변수 사용."""
+"""표준 라이브러리만 사용하는 /detect 1회 호출 검증."""
 import argparse
 import json
 import os
-import time
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -10,38 +9,29 @@ from urllib.request import Request, urlopen
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="http://localhost:8000")
-    parser.add_argument("--scenario", choices=["success", "empty", "failure"], default="success")
     args = parser.parse_args()
-    base = args.base_url.rstrip("/")
     headers = {"Content-Type": "application/json"}
     if os.getenv("API_KEY"):
         headers["X-API-Key"] = os.environ["API_KEY"]
-
-    def call(path, body=None):
-        data = json.dumps(body).encode() if body is not None else None
-        try:
-            with urlopen(Request(base + path, data=data, headers=headers), timeout=15) as response:
-                return json.load(response)
-        except HTTPError as exc:
-            raise SystemExit(f"HTTP {exc.code}: {exc.read().decode('utf-8')}") from exc
-
-    run = call("/api/v1/runs", {"start_date": "2026-10-01", "end_date": "2026-10-03", "mock_scenario": args.scenario})
-    print(f"run_id: {run['run_id']}")
-    deadline = time.monotonic() + 120
-    while run["status"] not in {"succeeded", "failed"}:
-        if time.monotonic() > deadline:
-            raise SystemExit("120초 대기 초과. 상태 URL을 다시 조회하세요.")
-        time.sleep(1)
-        run = call(run["status_url"])
-        print(f"{run['status']} / {run['stage']} / {run['progress']}%")
-    if run["status"] == "failed":
-        print(json.dumps(run["error"], ensure_ascii=False, indent=2))
-        return 0 if args.scenario == "failure" else 1
-    result = call(run["results_url"] + "?offset=0&limit=1")
-    print(json.dumps(result["summary"], ensure_ascii=False, indent=2))
-    print(f"total={result['total']}, first page items={len(result['items'])}")
-    return 0
+    body = {"tx_ids": ["TX_99198", "TX_99199", "TX_99200", "TX_99201"], "threshold": 0.8}
+    request = Request(args.base_url.rstrip("/") + "/api/v1/detect", data=json.dumps(body).encode(), headers=headers)
+    try:
+        with urlopen(request, timeout=90) as response:
+            result = json.load(response)
+    except HTTPError as exc:
+        raise SystemExit(f"HTTP {exc.code}: {exc.read().decode('utf-8')}") from exc
+    if result.get("is_mock") is not True:
+        raise SystemExit("이 검증은 GNN Mock 전용입니다. is_mock=true를 확인하세요.")
+    predictions = result["predictions"]
+    if [item["tx_id"] for item in predictions] != body["tx_ids"]:
+        raise SystemExit("응답 순서 또는 개수가 요청과 다릅니다")
+    if [item["anomaly_score"] for item in predictions] != [0.42, 0.63, 0.58, 0.94]:
+        raise SystemExit("골든 케이스 점수가 예상과 다릅니다")
+    if [item["is_detected"] for item in predictions] != [False, False, False, True]:
+        raise SystemExit("임계값 판정이 예상과 다릅니다")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print("OK: 4 predictions, 1 detected transaction")
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

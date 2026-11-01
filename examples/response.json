@@ -1,0 +1,27 @@
+{
+  "is_mock": true,
+  "model_version": "gnn-mock-v1",
+  "threshold": 0.8,
+  "predictions": [
+    {
+      "tx_id": "TX_99198",
+      "anomaly_score": 0.42,
+      "is_detected": false
+    },
+    {
+      "tx_id": "TX_99199",
+      "anomaly_score": 0.63,
+      "is_detected": false
+    },
+    {
+      "tx_id": "TX_99200",
+      "anomaly_score": 0.58,
+      "is_detected": false
+    },
+    {
+      "tx_id": "TX_99201",
+      "anomaly_score": 0.94,
+      "is_detected": true
+    }
+  ]
+}
